@@ -2,7 +2,7 @@ ResourceFu
 ==========
 
 ResourceFu is a collection of hacks from various plugins that I've
-developed to make using nested an polymorphic resources simpler in 
+developed to make using nested and polymorphic resources simpler in 
 my projects.
 
 Refactoring all of the hacks into a cohesive unit is still a 
