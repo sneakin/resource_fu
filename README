@@ -67,7 +67,7 @@ In album_controller.rb:
 
 def show
   @artist_id = params[:artist_id] # or fetch the actual Artist if you want
-  @album = Album.find(:first, :conditions => {:artist_id => @artist_id})
+  @album = Album.find(params[:id], :conditions => {:artist_id => @artist_id})
 	@album.songs.each do |song|
 		song_path(song) #=> /artists/@artist_id/albums/@album.id/songs/song.id
 	end
