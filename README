@@ -76,4 +76,4 @@ end
 Finally, if you want additional, non-route-segment params, you *don't* have
 to completely switch to the hash-argument style for route helpers:
 
-song_path(@artist, @album, @song, :page =2, :per_page => 20)
+song_path(@artist, @album, @song, :page => 2, :per_page => 20)
