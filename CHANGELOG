@@ -1,2 +1,5 @@
+* March 20th, 2007
+* Tests refactored courtesy of Steve Baker (on pobox.com he is srbaker)
+
 * March 19th, 2007
 * Added tests for inferencing in url helpers
