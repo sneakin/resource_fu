@@ -1,26 +1,58 @@
 module ProtoCool::ResourceFu::HelperDelegation
+  
+  class << self
+    def delegation_args(calling_controller, delegator, options = {})
+      unpacked = {:delegator => delegator.to_s}
+      unpacked[:delegator_singular] = (options[:singular] || delegator.to_s.singularize).to_s
 
-  def delegate_resources_helpers(*delegations)
-    options = delegations.pop
-    delegated = delegations.pop
-    if delegated.nil? || options[:to].nil?
-      raise ArgumentError, "Helper delegation expects arguments like ':images, :to => :user_images'"
-    end
-
-    target = options[:to].to_s
-    target_singular = target.singularize
-    delegated = delegated.to_s
-    delegated_singular = delegated.singularize
-    
-    ActionController::Routing::Routes.named_routes.select {|name,route| route.requirements[:controller] == target}.each do |name, route|
-      if name.to_s =~ /#{target}/
-        delegate_url_helpers name.to_s.gsub(/#{target}/, delegated), :to => name
-      elsif name.to_s =~ /#{target_singular}/
-        delegate_url_helpers name.to_s.gsub(/#{target_singular}/, delegated_singular), :to => name
+      if controller_option = options[:controller]
+        unpacked[:controller_path] = controller_option.respond_to?(:controller_path) ? controller_option.controller_path : controller_option.to_s
       else
-        raise ArgumentError, "Unable to figure out how to delegate for route: #{name.inspect}"
+        unpacked[:controller_path] = calling_controller.controller_path
+      end
+
+      if [options[:to], options[:name_prefix]].all?(&:blank?)
+        raise ArgumentError, "Helper delegation needs options for either :to or :name_prefix"
+      end
+      
+      unpacked[:delegated] = (options[:to] || unpacked[:delegator]).to_s
+      unpacked[:delegated_singular] = (options[:to_singular] || unpacked[:delegated].singularize).to_s
+      unpacked[:name_prefix] = options[:name_prefix].to_s
+      unpacked
+    end
+  end
+
+  def delegate_resources_helpers(delegator, option_args = {})
+    options = ProtoCool::ResourceFu::HelperDelegation.delegation_args(self, delegator, option_args)
+
+    match_plural = %r|^(formatted_){0,1}#{options[:name_prefix]}(.+){0,1}(#{options[:delegated]})$|
+    match_singular = %r|^(formatted_){0,1}#{options[:name_prefix]}(.+){0,1}(#{options[:delegated_singular]})$|
+
+    ActionController::Routing::Routes.named_routes.select {|name,route| route.requirements[:controller] == options[:controller_path]}.each do |name, route|
+      if match = match_plural.match(name.to_s)
+        delegate_url_helpers (match[1..-2] << options[:delegator]).join, :to => name
+      elsif match = match_singular.match(name.to_s)
+        delegate_url_helpers (match[1..-2] << options[:delegator_singular]).join, :to => name
+      else
+        logger.debug "HelperDelegation: Unable to figure out how to delegate resource #{options[:delegator].inspect} for route #{name.inspect}"
       end
     end
+    nil
+  end
+
+  def delegate_resource_helpers(delegator, option_args = {})
+    options = ProtoCool::ResourceFu::HelperDelegation.delegation_args(self, delegator, option_args)
+
+    match_plural = %r|^(formatted_){0,1}#{options[:name_prefix]}(.+){0,1}(#{options[:delegated]})$|
+
+    ActionController::Routing::Routes.named_routes.select {|name,route| route.requirements[:controller] == options[:controller_path]}.each do |name, route|
+      if match = match_plural.match(name.to_s)
+        delegate_url_helpers (match[1..-2] << options[:delegator]).join, :to => name
+      else
+        logger.debug "HelperDelegation: Unable to figure out how to delegate resource #{options[:delegator].inspect} for route #{name.inspect}"
+      end
+    end
+    nil
   end
 
   def delegate_url_helpers(*delegations)
