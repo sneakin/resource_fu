@@ -53,7 +53,7 @@ class InferencingHelpersFlangeTest < InferencingHelpersBaseTest
   end
 end
 
-class InferencingHelpersGrommetTest
+class InferencingHelpersGrommetTest < InferencingHelpersBaseTest
   def test_deep_inferred_positional_path
     with_nested_resource_expectation { get :show_deep_inferred_positional_path }
   end
