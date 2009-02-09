@@ -39,8 +39,10 @@ module ResourceFu
         opts = #{hash_access_method}(Hash === args.last ? args.pop : nil)
         raise ArgumentError, "expected a maximum of #{segment_keys.length} positional arguments for route" if args.length > #{segment_keys.length}
       
-        offset = #{segment_keys.length} - args.length
-        #{segment_keys.inspect}.each_with_index do |key, index|
+        # assume :format is always the last param. it needs to be skipped
+        # as a positional argument
+        offset = #{segment_keys[0...-1].length} - args.length
+        #{segment_keys[0...-1].inspect}.each_with_index do |key, index|
           if (index - offset) >= 0
             # supplied positional args always go in
             opts[key] = args[index - offset]
